@@ -27,8 +27,10 @@
 #pragma once
 
 
-#if defined(XMRIG_ARM) || defined(XMRIG_RISCV)
+#if defined(XMRIG_ARM)
 #   include "crypto/cn/sse2neon.h"
+#elif defined(XMRIG_RISCV)
+#   include "crypto/cn/sse2rvv.h"
 #elif defined(__GNUC__)
 #   include <x86intrin.h>
 #else
