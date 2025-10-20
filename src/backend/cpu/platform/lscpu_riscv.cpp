@@ -83,8 +83,11 @@ static bool read_riscv_cpuinfo(riscv_cpu_desc *desc)
             if (strstr(buf, "zve") || strstr(buf, "v_")) {
                 desc->has_vector = true;
             }
-            // Check for crypto extensions
-            if (strstr(buf, "zk") || strstr(buf, "zbk")) {
+            // Check for crypto extensions (AES, SHA, etc.)
+            // zkn* = NIST crypto suite, zks* = SM crypto suite
+            // Note: zba/zbb/zbc/zbs are bit-manipulation, NOT crypto
+            if (strstr(buf, "zknd") || strstr(buf, "zkne") || strstr(buf, "zknh") ||
+                strstr(buf, "zksed") || strstr(buf, "zksh")) {
                 desc->has_crypto = true;
             }
         }
