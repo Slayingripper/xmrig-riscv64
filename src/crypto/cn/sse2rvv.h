@@ -48,11 +48,6 @@ typedef union {
     int16_t  i16[8];
     int32_t  i32[4];
     int64_t  i64[2];
-#if USE_RVV_INTRINSICS
-    vuint64m1_t rvv_u64;
-    vuint32m1_t rvv_u32;
-    vuint8m1_t  rvv_u8;
-#endif
 } __m128i_union;
 
 typedef __m128i_union __m128i;
