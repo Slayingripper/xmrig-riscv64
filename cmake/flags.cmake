@@ -34,20 +34,25 @@ if (CMAKE_CXX_COMPILER_ID MATCHES GNU)
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=rv64gcv_zba_zbb_zbc_zbs")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=rv64gcv_zba_zbb_zbc_zbs")
         
+        # Enable RVV intrinsics
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mriscv-vector-bits=zvl128b")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mriscv-vector-bits=zvl128b")
+        
         # Aggressive optimizations for RISC-V
         # -funroll-loops: unroll loops for better instruction-level parallelism
         # -fomit-frame-pointer: save registers, crucial on RISC-V with limited registers
         # -fno-common: improved code generation
         # -finline-functions: inline more functions for better locality
         # -ffast-math: relaxed FP semantics for crypto/hash operations
-        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -funroll-loops -fomit-frame-pointer -fno-common -finline-functions -ffast-math")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -funroll-loops -fomit-frame-pointer -fno-common -finline-functions -ffast-math")
+        # -mvectorize-with-neon-quad: leverage RVV vectorization
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -funroll-loops -fomit-frame-pointer -fno-common -finline-functions -ffast-math -ftree-vectorize")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -funroll-loops -fomit-frame-pointer -fno-common -finline-functions -ffast-math -ftree-vectorize")
         
         # Inline assembly and other optimizations
         set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -minline-atomics")
         set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -minline-atomics")
         
-        add_definitions(-DHAVE_ROTR -DXMRIG_RISCV_OPTIMIZED)
+        add_definitions(-DHAVE_ROTR -DXMRIG_RISCV_OPTIMIZED -DXMRIG_RVV_ENABLED)
     else()
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -maes")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -maes")
@@ -95,15 +100,19 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES Clang)
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mfpu=neon -march=${CMAKE_SYSTEM_PROCESSOR}")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mfpu=neon -march=${CMAKE_SYSTEM_PROCESSOR}")
     elseif (XMRIG_RISCV)
-        # RISC-V optimizations for Clang
+        # RISC-V optimizations for Clang with RVV support
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=rv64gcv_zba_zbb_zbc_zbs")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=rv64gcv_zba_zbb_zbc_zbs")
         
-        # Aggressive optimizations
-        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -funroll-loops -fomit-frame-pointer -fno-common -finline-functions")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -funroll-loops -fomit-frame-pointer -fno-common -finline-functions")
+        # Enable vectorization with RVV
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mriscv-vector-bits=zvl128b -ftree-vectorize")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mriscv-vector-bits=zvl128b -ftree-vectorize")
         
-        add_definitions(-DHAVE_ROTR -DXMRIG_RISCV_OPTIMIZED)
+        # Aggressive optimizations
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -funroll-loops -fomit-frame-pointer -fno-common -finline-functions -ffast-math")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -funroll-loops -fomit-frame-pointer -fno-common -finline-functions -ffast-math")
+        
+        add_definitions(-DHAVE_ROTR -DXMRIG_RISCV_OPTIMIZED -DXMRIG_RVV_ENABLED)
     else()
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -maes")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -maes")
