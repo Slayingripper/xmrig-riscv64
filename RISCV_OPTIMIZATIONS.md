@@ -35,15 +35,22 @@ For RISC-V builds, the following flags are automatically applied:
 # Vector extensions + bit manipulation
 -march=rv64gcv_zba_zbb_zbc_zbs
 
-# Additional optimizations
--funroll-loops
--fomit-frame-pointer
+# Aggressive optimizations for maximum throughput
+-O3 -Ofast                  # Highest optimization level
+-funroll-loops              # Loop unrolling for ILP
+-fomit-frame-pointer        # Free register (limited on RISC-V)
+-fno-common                 # Better code generation
+-finline-functions          # Aggressive inlining
+-ffast-math                 # Relaxed FP (safe for mining)
+-flto                       # Link-time optimization
+-minline-atomics            # Inline atomic operations
 ```
 
 ### Compiler Requirements
 
 - **GCC 12+** or **Clang 15+** with RISC-V Vector support
 - RISC-V toolchain with RVV intrinsics (`riscv_vector.h`)
+- Optional: Binutils with RISC-V support
 
 ## Implementation Details
 
@@ -186,52 +193,112 @@ Example output:
 - Verify `-march=rv64gcv` was used during build
 - Check CPU frequency/governor: `cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor`
 
+## Recent Optimizations (October 2025)
+
+### Build-Time Improvements
+
+1. **Enhanced Compiler Flags** (`cmake/flags.cmake`):
+   - Added `-flto` (Link-Time Optimization) for cross-module inlining
+   - Added `-ffast-math` for relaxed FP semantics (safe for crypto/mining)
+   - Added `-finline-functions` for better function inlining
+   - Added `-minline-atomics` (GCC) for atomic operation inlining
+   - Optimized flag ordering for GCC and Clang
+
+2. **New RISC-V Specific Headers**:
+   - `src/crypto/riscv/riscv_crypto.h` - Crypto extensions support (Zbk*)
+   - `src/crypto/riscv/riscv_memory.h` - Memory operations and barriers
+   - `src/crypto/rx/RxDataset_riscv.h` - RandomX dataset optimization
+   - Includes fallbacks for non-RISC-V architectures
+
+3. **Memory Optimization** (`src/crypto/riscv/riscv_memory.h`):
+   - Cache-aware prefetching for better memory throughput
+   - Optimized memory barriers (acquire, release, full fence)
+   - Atomic operations using RISC-V A extension
+   - Cache-line aligned copy operations
+   - Early-exit memory comparison
+
+4. **Crypto Extensions Support** (`src/crypto/riscv/riscv_crypto.h`):
+   - Runtime detection of Zbk* crypto extensions
+   - Bit rotation operations (ROR) using Zbb if available
+   - Popcount and CTZ using hardware if available
+   - Fallback to software implementations
+   - Infrastructure for future Zkn/Zkne/Zknh support
+
+5. **Dataset Initialization** (`src/crypto/rx/RxDataset_riscv.h`):
+   - Adaptive thread allocation (60-75% of cores)
+   - CPU core affinity helper functions
+   - Prefetch hints for dataset access patterns
+   - Optimized cache-line aligned memory operations
+
+### Documentation
+
+New performance tuning guide: `doc/RISCV_PERF_TUNING.md`
+- Comprehensive memory configuration (2MB and 1GB huge pages)
+- Runtime optimization strategies
+- Configuration examples for different use cases
+- Performance diagnostics and troubleshooting
+- Expected performance metrics
+
 ## Future Optimizations
 
-### Planned Improvements
+### Planned Improvements (Phase 2)
 
-1. **Crypto Extensions**: Leverage Zkn/Zkr when available
-   - Hardware AES (if Zknd/Zkne available)
-   - SHA extensions (Zknh)
-   - Bit manipulation (current: Zba/Zbb/Zbc/Zbs)
+1. **Zbk* Full Integration**:
+   - AES-NI replacement using Zknd/Zkne when available
+   - SHA-256/512 using Zknh for hashing
+   - Runtime CPU feature detection with graceful fallback
 
-2. **RVV Optimizations**:
-   - Replace more scalar loops with vector operations
-   - Optimize for VLEN (vector length) detection
-   - Use segmented loads/stores (`vlseg`/`vsseg`)
-   - Implement vector permutations for shuffle operations
+2. **Advanced RVV Optimizations**:
+   - VLEN-aware algorithm selection
+   - Masked vector operations for gather/scatter
+   - Segmented loads/stores for transposed data
+   - Vector shuffle implementations
 
-3. **RandomX Specific**:
-   - Vector implementations of dataset generation
-   - SIMD AES for superscalar execution
-   - Cache-aligned memory access patterns
+3. **NUMA Optimization** (Multi-socket RISC-V):
+   - Per-socket memory affinity
+   - Cross-socket bandwidth optimization
+   - Nodeset-aware thread allocation
 
-4. **Memory Bandwidth**:
-   - Prefetch hints
-   - Non-temporal stores for large datasets
-   - NUMA-aware allocation
+4. **Microarchitecture Tuning**:
+   - Ky X1 specific optimizations
+   - Cache hierarchy detection
+   - Prefetch window tuning per core
+
+5. **Profile-Guided Optimization** (PGO):
+   - Collect runtime profiles
+   - Rebuild with PGO for +5-10% performance
 
 ### Contributing
 
-To add new RVV optimizations:
+To add new optimizations:
 
-1. Identify hot paths using `perf`:
+1. **Profile first**:
    ```bash
    perf record -g ./xmrig --bench=1M
-   perf report
+   perf report --stdio | head -100
    ```
 
-2. Add RVV implementation to `sse2rvv_optimized.h`:
-   ```c
-   #if USE_RVV_INTRINSICS
-       // RVV vectorized version
-   #else
-       // Scalar fallback
-   #endif
+2. **Identify hotspots** and add optimizations to appropriate header:
+   - `riscv_memory.h` for memory operations
+   - `riscv_crypto.h` for crypto/bit ops
+   - `RxDataset_riscv.h` for dataset init
+   - `sse2rvv_optimized.h` for vector ops
+
+3. **Test both scalar and vector paths**:
+   ```bash
+   # Scalar (fallback)
+   ./xmrig --bench=1M
+   
+   # With RVV (if enabled in build)
+   # Compare performance
    ```
 
-3. Test scalar and vector paths
-4. Benchmark performance gain
+4. **Benchmark thoroughly**:
+   ```bash
+   for i in {1..5}; do
+       ./xmrig --bench=10M --algo=rx/0
+   done
+   ```
 
 ## References
 
