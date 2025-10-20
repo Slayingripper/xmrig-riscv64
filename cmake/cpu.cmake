@@ -29,6 +29,13 @@ else()
     set(WITH_VAES OFF)
 endif()
 
+# Disable x86-specific features for RISC-V
+if (XMRIG_RISCV)
+    set(WITH_SSE4_1 OFF)
+    set(WITH_AVX2 OFF)
+    set(WITH_VAES OFF)
+endif()
+
 add_definitions(-DRAPIDJSON_WRITE_DEFAULT_FLAGS=6) # rapidjson::kWriteNanAndInfFlag | rapidjson::kWriteNanAndInfNullFlag
 
 if (ARM_V8)
@@ -43,6 +50,19 @@ if (NOT ARM_TARGET)
     elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "^(armv7|armv7f|armv7s|armv7k|armv7-a|armv7l|armv7ve)$")
         set(ARM_TARGET 7)
     endif()
+endif()
+
+# Detect RISC-V architecture
+if (CMAKE_SYSTEM_PROCESSOR MATCHES "^(riscv64|riscv|rv64)$")
+    set(RISCV_TARGET 64)
+    set(XMRIG_RISCV ON)
+    add_definitions(-DXMRIG_RISCV)
+    message(STATUS "Detected RISC-V 64-bit architecture (${CMAKE_SYSTEM_PROCESSOR})")
+elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "^(riscv32|rv32)$")
+    set(RISCV_TARGET 32)
+    set(XMRIG_RISCV ON)
+    add_definitions(-DXMRIG_RISCV)
+    message(STATUS "Detected RISC-V 32-bit architecture (${CMAKE_SYSTEM_PROCESSOR})")
 endif()
 
 if (ARM_TARGET AND ARM_TARGET GREATER 6)
