@@ -34,9 +34,9 @@ if (CMAKE_CXX_COMPILER_ID MATCHES GNU)
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=rv64gcv_zba_zbb_zbc_zbs")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=rv64gcv_zba_zbb_zbc_zbs")
         
-        # Enable additional optimizations
-        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mtune=generic-rv64 -funroll-loops -fomit-frame-pointer")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mtune=generic-rv64 -funroll-loops -fomit-frame-pointer")
+        # Enable additional optimizations (no -mtune for RISC-V, not widely supported yet)
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -funroll-loops -fomit-frame-pointer")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -funroll-loops -fomit-frame-pointer")
         
         add_definitions(-DHAVE_ROTR)
     else()
