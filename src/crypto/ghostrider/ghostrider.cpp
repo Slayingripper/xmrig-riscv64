@@ -55,11 +55,8 @@
 #   endif
 #endif
 
-#if defined(XMRIG_ARM)
+#if defined(XMRIG_ARM) || defined(XMRIG_RISCV)
 #   include "crypto/cn/sse2neon.h"
-#elif defined(XMRIG_RISCV)
-    // RISC-V doesn't have SSE/NEON, provide minimal compatibility
-#   define _mm_pause() __asm__ __volatile__("nop")
 #elif defined(__GNUC__)
 #   include <x86intrin.h>
 #else
