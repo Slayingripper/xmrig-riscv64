@@ -16,12 +16,12 @@
  */
 
 /*
- * SSE to RISC-V Vector (RVV) optimized compatibility header
- * Provides both scalar fallback and vectorized implementations using RVV intrinsics
+ * SSE to RISC-V compatibility header
+ * Provides scalar implementations of SSE intrinsics for RISC-V architecture
  */
 
-#ifndef XMRIG_SSE2RVV_OPTIMIZED_H
-#define XMRIG_SSE2RVV_OPTIMIZED_H
+#ifndef XMRIG_SSE2RVV_H
+#define XMRIG_SSE2RVV_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -29,14 +29,6 @@ extern "C" {
 
 #include <stdint.h>
 #include <string.h>
-
-/* Check if RVV is available */
-#if defined(__riscv_vector)
-#include <riscv_vector.h>
-#define USE_RVV_INTRINSICS 1
-#else
-#define USE_RVV_INTRINSICS 0
-#endif
 
 /* 128-bit vector type */
 typedef union {
@@ -48,11 +40,6 @@ typedef union {
     int16_t  i16[8];
     int32_t  i32[4];
     int64_t  i64[2];
-#if USE_RVV_INTRINSICS
-    vuint64m1_t rvv_u64;
-    vuint32m1_t rvv_u32;
-    vuint8m1_t  rvv_u8;
-#endif
 } __m128i_union;
 
 typedef __m128i_union __m128i;
@@ -119,94 +106,42 @@ static inline __m128i _mm_shuffle_epi32(__m128i a, int imm8)
     return result;
 }
 
-/* Logical operations - optimized with RVV when available */
+/* Logical operations */
 static inline __m128i _mm_xor_si128(__m128i a, __m128i b)
 {
-#if USE_RVV_INTRINSICS
-    __m128i result;
-    size_t vl = __riscv_vsetvl_e64m1(2);
-    vuint64m1_t va = __riscv_vle64_v_u64m1(a.u64, vl);
-    vuint64m1_t vb = __riscv_vle64_v_u64m1(b.u64, vl);
-    vuint64m1_t vr = __riscv_vxor_vv_u64m1(va, vb, vl);
-    __riscv_vse64_v_u64m1(result.u64, vr, vl);
-    return result;
-#else
     __m128i result;
     result.u64[0] = a.u64[0] ^ b.u64[0];
     result.u64[1] = a.u64[1] ^ b.u64[1];
     return result;
-#endif
 }
 
 static inline __m128i _mm_or_si128(__m128i a, __m128i b)
 {
-#if USE_RVV_INTRINSICS
-    __m128i result;
-    size_t vl = __riscv_vsetvl_e64m1(2);
-    vuint64m1_t va = __riscv_vle64_v_u64m1(a.u64, vl);
-    vuint64m1_t vb = __riscv_vle64_v_u64m1(b.u64, vl);
-    vuint64m1_t vr = __riscv_vor_vv_u64m1(va, vb, vl);
-    __riscv_vse64_v_u64m1(result.u64, vr, vl);
-    return result;
-#else
     __m128i result;
     result.u64[0] = a.u64[0] | b.u64[0];
     result.u64[1] = a.u64[1] | b.u64[1];
     return result;
-#endif
 }
 
 static inline __m128i _mm_and_si128(__m128i a, __m128i b)
 {
-#if USE_RVV_INTRINSICS
-    __m128i result;
-    size_t vl = __riscv_vsetvl_e64m1(2);
-    vuint64m1_t va = __riscv_vle64_v_u64m1(a.u64, vl);
-    vuint64m1_t vb = __riscv_vle64_v_u64m1(b.u64, vl);
-    vuint64m1_t vr = __riscv_vand_vv_u64m1(va, vb, vl);
-    __riscv_vse64_v_u64m1(result.u64, vr, vl);
-    return result;
-#else
     __m128i result;
     result.u64[0] = a.u64[0] & b.u64[0];
     result.u64[1] = a.u64[1] & b.u64[1];
     return result;
-#endif
 }
 
 static inline __m128i _mm_andnot_si128(__m128i a, __m128i b)
 {
-#if USE_RVV_INTRINSICS
-    __m128i result;
-    size_t vl = __riscv_vsetvl_e64m1(2);
-    vuint64m1_t va = __riscv_vle64_v_u64m1(a.u64, vl);
-    vuint64m1_t vb = __riscv_vle64_v_u64m1(b.u64, vl);
-    vuint64m1_t vnot_a = __riscv_vnot_v_u64m1(va, vl);
-    vuint64m1_t vr = __riscv_vand_vv_u64m1(vnot_a, vb, vl);
-    __riscv_vse64_v_u64m1(result.u64, vr, vl);
-    return result;
-#else
     __m128i result;
     result.u64[0] = (~a.u64[0]) & b.u64[0];
     result.u64[1] = (~a.u64[1]) & b.u64[1];
     return result;
-#endif
 }
 
 /* Shift operations */
 static inline __m128i _mm_slli_si128(__m128i a, int imm8)
 {
-#if USE_RVV_INTRINSICS
-    __m128i result = _mm_setzero_si128();
-    int count = imm8 & 0xFF;
-    if (count > 15) return result;
-    
-    size_t vl = __riscv_vsetvl_e8m1(16);
-    vuint8m1_t va = __riscv_vle8_v_u8m1(a.u8, vl);
-    vuint8m1_t vr = __riscv_vslideup_vx_u8m1(__riscv_vmv_v_x_u8m1(0, vl), va, count, vl);
-    __riscv_vse8_v_u8m1(result.u8, vr, vl);
-    return result;
-#else
     __m128i result = _mm_setzero_si128();
     int count = imm8 & 0xFF;
     if (count > 15) return result;
@@ -215,22 +150,10 @@ static inline __m128i _mm_slli_si128(__m128i a, int imm8)
         result.u8[i + count] = a.u8[i];
     }
     return result;
-#endif
 }
 
 static inline __m128i _mm_srli_si128(__m128i a, int imm8)
 {
-#if USE_RVV_INTRINSICS
-    __m128i result = _mm_setzero_si128();
-    int count = imm8 & 0xFF;
-    if (count > 15) return result;
-    
-    size_t vl = __riscv_vsetvl_e8m1(16);
-    vuint8m1_t va = __riscv_vle8_v_u8m1(a.u8, vl);
-    vuint8m1_t vr = __riscv_vslidedown_vx_u8m1(va, count, vl);
-    __riscv_vse8_v_u8m1(result.u8, vr, vl);
-    return result;
-#else
     __m128i result = _mm_setzero_si128();
     int count = imm8 & 0xFF;
     if (count > 15) return result;
@@ -239,24 +162,10 @@ static inline __m128i _mm_srli_si128(__m128i a, int imm8)
         result.u8[i - count] = a.u8[i];
     }
     return result;
-#endif
 }
 
 static inline __m128i _mm_slli_epi64(__m128i a, int imm8)
 {
-#if USE_RVV_INTRINSICS
-    __m128i result;
-    if (imm8 > 63) {
-        result.u64[0] = 0;
-        result.u64[1] = 0;
-    } else {
-        size_t vl = __riscv_vsetvl_e64m1(2);
-        vuint64m1_t va = __riscv_vle64_v_u64m1(a.u64, vl);
-        vuint64m1_t vr = __riscv_vsll_vx_u64m1(va, imm8, vl);
-        __riscv_vse64_v_u64m1(result.u64, vr, vl);
-    }
-    return result;
-#else
     __m128i result;
     if (imm8 > 63) {
         result.u64[0] = 0;
@@ -266,24 +175,10 @@ static inline __m128i _mm_slli_epi64(__m128i a, int imm8)
         result.u64[1] = a.u64[1] << imm8;
     }
     return result;
-#endif
 }
 
 static inline __m128i _mm_srli_epi64(__m128i a, int imm8)
 {
-#if USE_RVV_INTRINSICS
-    __m128i result;
-    if (imm8 > 63) {
-        result.u64[0] = 0;
-        result.u64[1] = 0;
-    } else {
-        size_t vl = __riscv_vsetvl_e64m1(2);
-        vuint64m1_t va = __riscv_vle64_v_u64m1(a.u64, vl);
-        vuint64m1_t vr = __riscv_vsrl_vx_u64m1(va, imm8, vl);
-        __riscv_vse64_v_u64m1(result.u64, vr, vl);
-    }
-    return result;
-#else
     __m128i result;
     if (imm8 > 63) {
         result.u64[0] = 0;
@@ -293,23 +188,14 @@ static inline __m128i _mm_srli_epi64(__m128i a, int imm8)
         result.u64[1] = a.u64[1] >> imm8;
     }
     return result;
-#endif
 }
 
-/* Load/store operations - optimized with RVV */
+/* Load/store operations */
 static inline __m128i _mm_load_si128(const __m128i* p)
 {
-#if USE_RVV_INTRINSICS
-    __m128i result;
-    size_t vl = __riscv_vsetvl_e64m1(2);
-    vuint64m1_t v = __riscv_vle64_v_u64m1((const uint64_t*)p, vl);
-    __riscv_vse64_v_u64m1(result.u64, v, vl);
-    return result;
-#else
     __m128i result;
     memcpy(&result, p, sizeof(__m128i));
     return result;
-#endif
 }
 
 static inline __m128i _mm_loadu_si128(const __m128i* p)
@@ -321,13 +207,7 @@ static inline __m128i _mm_loadu_si128(const __m128i* p)
 
 static inline void _mm_store_si128(__m128i* p, __m128i a)
 {
-#if USE_RVV_INTRINSICS
-    size_t vl = __riscv_vsetvl_e64m1(2);
-    vuint64m1_t v = __riscv_vle64_v_u64m1(a.u64, vl);
-    __riscv_vse64_v_u64m1((uint64_t*)p, v, vl);
-#else
     memcpy(p, &a, sizeof(__m128i));
-#endif
 }
 
 static inline void _mm_storeu_si128(__m128i* p, __m128i a)
@@ -335,78 +215,38 @@ static inline void _mm_storeu_si128(__m128i* p, __m128i a)
     memcpy(p, &a, sizeof(__m128i));
 }
 
-/* Arithmetic operations - optimized with RVV */
+/* Arithmetic operations */
 static inline __m128i _mm_add_epi64(__m128i a, __m128i b)
 {
-#if USE_RVV_INTRINSICS
-    __m128i result;
-    size_t vl = __riscv_vsetvl_e64m1(2);
-    vuint64m1_t va = __riscv_vle64_v_u64m1(a.u64, vl);
-    vuint64m1_t vb = __riscv_vle64_v_u64m1(b.u64, vl);
-    vuint64m1_t vr = __riscv_vadd_vv_u64m1(va, vb, vl);
-    __riscv_vse64_v_u64m1(result.u64, vr, vl);
-    return result;
-#else
     __m128i result;
     result.u64[0] = a.u64[0] + b.u64[0];
     result.u64[1] = a.u64[1] + b.u64[1];
     return result;
-#endif
 }
 
 static inline __m128i _mm_add_epi32(__m128i a, __m128i b)
 {
-#if USE_RVV_INTRINSICS
-    __m128i result;
-    size_t vl = __riscv_vsetvl_e32m1(4);
-    vuint32m1_t va = __riscv_vle32_v_u32m1(a.u32, vl);
-    vuint32m1_t vb = __riscv_vle32_v_u32m1(b.u32, vl);
-    vuint32m1_t vr = __riscv_vadd_vv_u32m1(va, vb, vl);
-    __riscv_vse32_v_u32m1(result.u32, vr, vl);
-    return result;
-#else
     __m128i result;
     for (int i = 0; i < 4; i++) {
         result.i32[i] = a.i32[i] + b.i32[i];
     }
     return result;
-#endif
 }
 
 static inline __m128i _mm_sub_epi64(__m128i a, __m128i b)
 {
-#if USE_RVV_INTRINSICS
-    __m128i result;
-    size_t vl = __riscv_vsetvl_e64m1(2);
-    vuint64m1_t va = __riscv_vle64_v_u64m1(a.u64, vl);
-    vuint64m1_t vb = __riscv_vle64_v_u64m1(b.u64, vl);
-    vuint64m1_t vr = __riscv_vsub_vv_u64m1(va, vb, vl);
-    __riscv_vse64_v_u64m1(result.u64, vr, vl);
-    return result;
-#else
     __m128i result;
     result.u64[0] = a.u64[0] - b.u64[0];
     result.u64[1] = a.u64[1] - b.u64[1];
     return result;
-#endif
 }
 
 static inline __m128i _mm_mul_epu32(__m128i a, __m128i b)
 {
-#if USE_RVV_INTRINSICS
-    __m128i result;
-    size_t vl = __riscv_vsetvl_e64m1(2);
-    vuint64m1_t va_lo = __riscv_vzext_vf2_u64m1(__riscv_vle32_v_u32mf2(&a.u32[0], 2), vl);
-    vuint64m1_t vb_lo = __riscv_vzext_vf2_u64m1(__riscv_vle32_v_u32mf2(&b.u32[0], 2), vl);
-    vuint64m1_t vr = __riscv_vmul_vv_u64m1(va_lo, vb_lo, vl);
-    __riscv_vse64_v_u64m1(result.u64, vr, vl);
-    return result;
-#else
     __m128i result;
     result.u64[0] = (uint64_t)a.u32[0] * (uint64_t)b.u32[0];
     result.u64[1] = (uint64_t)a.u32[2] * (uint64_t)b.u32[2];
     return result;
-#endif
 }
 
 /* Unpack operations */
@@ -429,18 +269,15 @@ static inline __m128i _mm_unpackhi_epi64(__m128i a, __m128i b)
 /* Pause instruction for spin-wait loops */
 static inline void _mm_pause(void)
 {
-    /* RISC-V pause hint if available (requires Zihintpause extension) */
-#if defined(__riscv_zihintpause)
-    __asm__ __volatile__("pause");
-#else
+    /* RISC-V doesn't have a direct equivalent to x86 PAUSE
+     * Use a simple NOP or yield hint */
     __asm__ __volatile__("nop");
-#endif
 }
 
-/* Memory fence - optimized for RISC-V */
+/* Memory fence */
 static inline void _mm_mfence(void)
 {
-    __asm__ __volatile__("fence rw,rw" ::: "memory");
+    __asm__ __volatile__("fence" ::: "memory");
 }
 
 static inline void _mm_lfence(void)
@@ -475,18 +312,6 @@ static inline __m128i _mm_cmpeq_epi64(__m128i a, __m128i b)
 /* Additional shift operations */
 static inline __m128i _mm_slli_epi32(__m128i a, int imm8)
 {
-#if USE_RVV_INTRINSICS
-    __m128i result;
-    if (imm8 > 31) {
-        memset(&result, 0, sizeof(result));
-    } else {
-        size_t vl = __riscv_vsetvl_e32m1(4);
-        vuint32m1_t va = __riscv_vle32_v_u32m1(a.u32, vl);
-        vuint32m1_t vr = __riscv_vsll_vx_u32m1(va, imm8, vl);
-        __riscv_vse32_v_u32m1(result.u32, vr, vl);
-    }
-    return result;
-#else
     __m128i result;
     if (imm8 > 31) {
         for (int i = 0; i < 4; i++) result.u32[i] = 0;
@@ -496,23 +321,10 @@ static inline __m128i _mm_slli_epi32(__m128i a, int imm8)
         }
     }
     return result;
-#endif
 }
 
 static inline __m128i _mm_srli_epi32(__m128i a, int imm8)
 {
-#if USE_RVV_INTRINSICS
-    __m128i result;
-    if (imm8 > 31) {
-        memset(&result, 0, sizeof(result));
-    } else {
-        size_t vl = __riscv_vsetvl_e32m1(4);
-        vuint32m1_t va = __riscv_vle32_v_u32m1(a.u32, vl);
-        vuint32m1_t vr = __riscv_vsrl_vx_u32m1(va, imm8, vl);
-        __riscv_vse32_v_u32m1(result.u32, vr, vl);
-    }
-    return result;
-#else
     __m128i result;
     if (imm8 > 31) {
         for (int i = 0; i < 4; i++) result.u32[i] = 0;
@@ -522,7 +334,6 @@ static inline __m128i _mm_srli_epi32(__m128i a, int imm8)
         }
     }
     return result;
-#endif
 }
 
 /* 64-bit integer operations */
@@ -534,7 +345,7 @@ static inline __m128i _mm_set1_epi64x(int64_t a)
     return result;
 }
 
-/* Float type for compatibility */
+/* Float type for compatibility - we'll treat it as int for simplicity */
 typedef __m128i __m128;
 
 /* Float operations - simplified scalar implementations */
@@ -645,14 +456,20 @@ static inline __m128i _mm_set1_epi32(int a)
     return result;
 }
 
-/* AES instructions - placeholders for soft_aes compatibility */
+/* AES instructions - these are placeholders, actual AES is done via soft_aes.h */
+/* On RISC-V without crypto extensions, these should never be called directly */
+/* They are only here for compilation compatibility */
 static inline __m128i _mm_aesenc_si128(__m128i a, __m128i roundkey)
 {
+    /* This is a placeholder - actual implementation should use soft_aes */
+    /* If this function is called, it means SOFT_AES template parameter wasn't used */
+    /* We return a XOR as a minimal fallback, but proper code should use soft_aesenc */
     return _mm_xor_si128(a, roundkey);
 }
 
 static inline __m128i _mm_aeskeygenassist_si128(__m128i a, const int rcon)
 {
+    /* Placeholder for AES key generation - should use soft_aeskeygenassist */
     return a;
 }
 
@@ -694,12 +511,18 @@ static inline void vst1q_u64(uint64_t *ptr, uint64x2_t val)
 
 static inline uint64x2_t veorq_u64(uint64x2_t a, uint64x2_t b)
 {
-    return _mm_xor_si128(a, b);
+    uint64x2_t result;
+    result.u64[0] = a.u64[0] ^ b.u64[0];
+    result.u64[1] = a.u64[1] ^ b.u64[1];
+    return result;
 }
 
 static inline uint64x2_t vaddq_u64(uint64x2_t a, uint64x2_t b)
 {
-    return _mm_add_epi64(a, b);
+    uint64x2_t result;
+    result.u64[0] = a.u64[0] + b.u64[0];
+    result.u64[1] = a.u64[1] + b.u64[1];
+    return result;
 }
 
 static inline uint64x2_t vreinterpretq_u64_u8(uint8x16_t a)
@@ -745,4 +568,4 @@ static inline uint64x2_t vcombine_u64(uint64x1_t low, uint64x1_t high)
 }
 #endif
 
-#endif /* XMRIG_SSE2RVV_OPTIMIZED_H */
+#endif /* XMRIG_SSE2RVV_H */
