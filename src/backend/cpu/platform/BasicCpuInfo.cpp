@@ -23,10 +23,12 @@
 #include <thread>
 
 
-#ifdef _MSC_VER
-#   include <intrin.h>
-#else
-#   include <cpuid.h>
+#if !defined(XMRIG_ARM) && !defined(XMRIG_RISCV)
+#   ifdef _MSC_VER
+#       include <intrin.h>
+#   else
+#       include <cpuid.h>
+#   endif
 #endif
 
 
@@ -70,6 +72,7 @@ static_assert(kMsrArraySize == ICpuInfo::MSR_MOD_MAX, "kMsrArraySize and MSR_MOD
 #endif
 
 
+#if !defined(XMRIG_ARM) && !defined(XMRIG_RISCV)
 static inline void cpuid(uint32_t level, int32_t output[4])
 {
     memset(output, 0, sizeof(int32_t) * 4);
@@ -80,6 +83,7 @@ static inline void cpuid(uint32_t level, int32_t output[4])
     __cpuid_count(level, 0, output[0], output[1], output[2], output[3]);
 #   endif
 }
+#endif
 
 
 static void cpu_brand_string(char out[64 + 6]) {

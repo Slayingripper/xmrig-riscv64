@@ -46,7 +46,7 @@ else()
     set(CPUID_LIB "")
 endif()
 
-if (XMRIG_ARM)
+if (XMRIG_ARM OR XMRIG_RISCV)
     list(APPEND SOURCES_BACKEND_CPU src/backend/cpu/platform/BasicCpuInfo_arm.cpp)
 
     if (XMRIG_OS_WIN)
