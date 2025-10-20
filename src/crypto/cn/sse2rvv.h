@@ -473,6 +473,77 @@ static inline __m128i _mm_aeskeygenassist_si128(__m128i a, const int rcon)
     return a;
 }
 
+/* Rotate right operation for soft_aes.h */
+static inline uint32_t _rotr(uint32_t value, unsigned int count)
+{
+    const unsigned int mask = 31;
+    count &= mask;
+    return (value >> count) | (value << ((-count) & mask));
+}
+
+/* ARM NEON compatibility types and intrinsics for RISC-V */
+typedef __m128i_union uint64x2_t;
+typedef __m128i_union uint8x16_t;
+
+static inline uint64x2_t vld1q_u64(const uint64_t *ptr)
+{
+    uint64x2_t result;
+    result.u64[0] = ptr[0];
+    result.u64[1] = ptr[1];
+    return result;
+}
+
+static inline void vst1q_u64(uint64_t *ptr, uint64x2_t val)
+{
+    ptr[0] = val.u64[0];
+    ptr[1] = val.u64[1];
+}
+
+static inline uint64x2_t veorq_u64(uint64x2_t a, uint64x2_t b)
+{
+    uint64x2_t result;
+    result.u64[0] = a.u64[0] ^ b.u64[0];
+    result.u64[1] = a.u64[1] ^ b.u64[1];
+    return result;
+}
+
+static inline uint64x2_t vaddq_u64(uint64x2_t a, uint64x2_t b)
+{
+    uint64x2_t result;
+    result.u64[0] = a.u64[0] + b.u64[0];
+    result.u64[1] = a.u64[1] + b.u64[1];
+    return result;
+}
+
+static inline uint64x2_t vreinterpretq_u64_u8(uint8x16_t a)
+{
+    uint64x2_t result;
+    memcpy(&result, &a, sizeof(uint64x2_t));
+    return result;
+}
+
+static inline uint64_t vgetq_lane_u64(uint64x2_t v, int lane)
+{
+    return v.u64[lane];
+}
+
+typedef struct { uint64_t val[1]; } uint64x1_t;
+
+static inline uint64x1_t vcreate_u64(uint64_t a)
+{
+    uint64x1_t result;
+    result.val[0] = a;
+    return result;
+}
+
+static inline uint64x2_t vcombine_u64(uint64x1_t low, uint64x1_t high)
+{
+    uint64x2_t result;
+    result.u64[0] = low.val[0];
+    result.u64[1] = high.val[0];
+    return result;
+}
+
 #ifdef __cplusplus
 }
 #endif
