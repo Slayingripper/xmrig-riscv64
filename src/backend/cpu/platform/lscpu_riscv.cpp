@@ -61,7 +61,9 @@ static bool lookup_riscv(char *line, const char *pattern, String &value)
         p[len - 1] = '\0';
     }
 
-    value = p;
+    // Ensure we call the const char* assignment (which performs a copy)
+    // instead of the char* overload (which would take ownership of the pointer)
+    value = (const char*)p;
     return true;
 }
 
