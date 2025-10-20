@@ -484,12 +484,22 @@ static inline uint32_t _rotr(uint32_t value, unsigned int count)
 /* ARM NEON compatibility types and intrinsics for RISC-V */
 typedef __m128i_union uint64x2_t;
 typedef __m128i_union uint8x16_t;
+typedef __m128i_union int64x2_t;
+typedef __m128i_union int32x4_t;
 
 static inline uint64x2_t vld1q_u64(const uint64_t *ptr)
 {
     uint64x2_t result;
     result.u64[0] = ptr[0];
     result.u64[1] = ptr[1];
+    return result;
+}
+
+static inline int64x2_t vld1q_s64(const int64_t *ptr)
+{
+    int64x2_t result;
+    result.i64[0] = ptr[0];
+    result.i64[1] = ptr[1];
     return result;
 }
 
@@ -525,6 +535,16 @@ static inline uint64x2_t vreinterpretq_u64_u8(uint8x16_t a)
 static inline uint64_t vgetq_lane_u64(uint64x2_t v, int lane)
 {
     return v.u64[lane];
+}
+
+static inline int64_t vgetq_lane_s64(int64x2_t v, int lane)
+{
+    return v.i64[lane];
+}
+
+static inline int32_t vgetq_lane_s32(int32x4_t v, int lane)
+{
+    return v.i32[lane];
 }
 
 typedef struct { uint64_t val[1]; } uint64x1_t;
