@@ -29,7 +29,15 @@ if (CMAKE_CXX_COMPILER_ID MATCHES GNU)
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=armv7-a -mfpu=neon -flax-vector-conversions")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=armv7-a -mfpu=neon -flax-vector-conversions")
     elseif (XMRIG_RISCV)
-        # RISC-V: no AES hardware instructions, use software implementation
+        # RISC-V-specific optimizations
+        # Use vector extensions and bit manipulation extensions
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=rv64gcv_zba_zbb_zbc_zbs")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=rv64gcv_zba_zbb_zbc_zbs")
+        
+        # Enable additional optimizations
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mtune=generic-rv64 -funroll-loops -fomit-frame-pointer")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mtune=generic-rv64 -funroll-loops -fomit-frame-pointer")
+        
         add_definitions(-DHAVE_ROTR)
     else()
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -maes")

@@ -42,13 +42,32 @@ namespace xmrig {
 
 extern String cpu_name_arm();
 
+#ifdef XMRIG_RISCV
+extern String cpu_name_riscv();
+extern bool has_riscv_vector();
+extern bool has_riscv_crypto();
+#endif
+
 
 } // namespace xmrig
 
 
 void xmrig::BasicCpuInfo::init_arm()
 {
-#   if __ARM_FEATURE_CRYPTO
+#   ifdef XMRIG_RISCV
+    // RISC-V specific detection
+    auto name = cpu_name_riscv();
+    if (!name.isNull()) {
+        strncpy(m_brand, name, sizeof(m_brand) - 1);
+    }
+    
+    // Check for crypto extensions (Zbk* extensions)
+    m_flags.set(FLAG_AES, has_riscv_crypto());
+    
+    // RISC-V typically supports 1GB huge pages
+    m_flags.set(FLAG_PDPE1GB, std::ifstream("/sys/kernel/mm/hugepages/hugepages-1048576kB/nr_hugepages").good());
+    
+#   elif __ARM_FEATURE_CRYPTO
 #   if defined(XMRIG_OS_FREEBSD)
     uint64_t isar0 = READ_SPECIALREG(id_aa64isar0_el1);
     m_flags.set(FLAG_AES, ID_AA64ISAR0_AES_VAL(isar0) >= ID_AA64ISAR0_AES_BASE);
@@ -57,7 +76,7 @@ void xmrig::BasicCpuInfo::init_arm()
 #   endif
 #   endif
 
-#   if defined(XMRIG_OS_UNIX)
+#   if defined(XMRIG_OS_UNIX) && !defined(XMRIG_RISCV)
     auto name = cpu_name_arm();
     if (!name.isNull()) {
         strncpy(m_brand, name, sizeof(m_brand) - 1);
