@@ -34,17 +34,13 @@ if (CMAKE_CXX_COMPILER_ID MATCHES GNU)
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=rv64gcv_zba_zbb_zbc_zbs")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=rv64gcv_zba_zbb_zbc_zbs")
         
-        # Enable RVV intrinsics
-        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mriscv-vector-bits=zvl128b")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mriscv-vector-bits=zvl128b")
-        
         # Aggressive optimizations for RISC-V
         # -funroll-loops: unroll loops for better instruction-level parallelism
         # -fomit-frame-pointer: save registers, crucial on RISC-V with limited registers
         # -fno-common: improved code generation
         # -finline-functions: inline more functions for better locality
         # -ffast-math: relaxed FP semantics for crypto/hash operations
-        # -mvectorize-with-neon-quad: leverage RVV vectorization
+        # -ftree-vectorize: enable auto-vectorization for RVV
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -funroll-loops -fomit-frame-pointer -fno-common -finline-functions -ffast-math -ftree-vectorize")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -funroll-loops -fomit-frame-pointer -fno-common -finline-functions -ffast-math -ftree-vectorize")
         
@@ -104,9 +100,9 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES Clang)
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=rv64gcv_zba_zbb_zbc_zbs")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=rv64gcv_zba_zbb_zbc_zbs")
         
-        # Enable vectorization with RVV
-        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mriscv-vector-bits=zvl128b -ftree-vectorize")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mriscv-vector-bits=zvl128b -ftree-vectorize")
+        # Enable auto-vectorization for RVV
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ftree-vectorize")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ftree-vectorize")
         
         # Aggressive optimizations
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -funroll-loops -fomit-frame-pointer -fno-common -finline-functions -ffast-math")
