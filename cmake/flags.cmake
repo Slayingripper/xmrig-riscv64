@@ -40,9 +40,8 @@ if (CMAKE_CXX_COMPILER_ID MATCHES GNU)
         # -fno-common: improved code generation
         # -finline-functions: inline more functions for better locality
         # -ffast-math: relaxed FP semantics for crypto/hash operations
-        # -flto: link-time optimization for cross-module inlining
-        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -funroll-loops -fomit-frame-pointer -fno-common -finline-functions -ffast-math -flto")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -funroll-loops -fomit-frame-pointer -fno-common -finline-functions -ffast-math -flto")
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -funroll-loops -fomit-frame-pointer -fno-common -finline-functions -ffast-math")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -funroll-loops -fomit-frame-pointer -fno-common -finline-functions -ffast-math")
         
         # Inline assembly and other optimizations
         set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -minline-atomics")
