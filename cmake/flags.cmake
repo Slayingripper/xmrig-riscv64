@@ -31,26 +31,12 @@ if (CMAKE_CXX_COMPILER_ID MATCHES GNU)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=armv7-a -mfpu=neon -flax-vector-conversions")
         add_definitions(-DHAVE_ROTR)
     elseif (XMRIG_RISCV)
-        # RISC-V-specific optimizations for maximum performance
-        # Use vector extensions (V) and bit manipulation extensions (Zba, Zbb, Zbc, Zbs)
-        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=rv64gcv_zba_zbb_zbc_zbs")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=rv64gcv_zba_zbb_zbc_zbs")
+        # RISC-V baseline: rv64gc (RV64IMAFD + Zicsr + Zifencei)
+        # Use rv64gc for broad compatibility, extensions will be detected at runtime
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=rv64gc")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=rv64gc")
         
-        # Aggressive optimizations for RISC-V
-        # -funroll-loops: unroll loops for better instruction-level parallelism
-        # -fomit-frame-pointer: save registers, crucial on RISC-V with limited registers
-        # -fno-common: improved code generation
-        # -finline-functions: inline more functions for better locality
-        # -ffast-math: relaxed FP semantics for crypto/hash operations
-        # -ftree-vectorize: enable auto-vectorization for RVV
-        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -funroll-loops -fomit-frame-pointer -fno-common -finline-functions -ffast-math -ftree-vectorize")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -funroll-loops -fomit-frame-pointer -fno-common -finline-functions -ffast-math -ftree-vectorize")
-        
-        # Inline assembly and other optimizations
-        set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -minline-atomics")
-        set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -minline-atomics")
-        
-        add_definitions(-DHAVE_ROTR -DXMRIG_RISCV_OPTIMIZED -DXMRIG_RVV_ENABLED)
+        add_definitions(-DHAVE_ROTR)
     else()
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -maes")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -maes")
@@ -100,19 +86,12 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES Clang)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mfpu=neon -march=${CMAKE_SYSTEM_PROCESSOR}")
         add_definitions(-DHAVE_ROTR)
     elseif (XMRIG_RISCV)
-        # RISC-V optimizations for Clang with RVV support
-        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=rv64gcv_zba_zbb_zbc_zbs")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=rv64gcv_zba_zbb_zbc_zbs")
+        # RISC-V baseline: rv64gc (RV64IMAFD + Zicsr + Zifencei)
+        # Use rv64gc for broad compatibility, extensions will be detected at runtime
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=rv64gc")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=rv64gc")
         
-        # Enable auto-vectorization for RVV
-        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ftree-vectorize")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ftree-vectorize")
-        
-        # Aggressive optimizations
-        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -funroll-loops -fomit-frame-pointer -fno-common -finline-functions -ffast-math")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -funroll-loops -fomit-frame-pointer -fno-common -finline-functions -ffast-math")
-        
-        add_definitions(-DHAVE_ROTR -DXMRIG_RISCV_OPTIMIZED -DXMRIG_RVV_ENABLED)
+        add_definitions(-DHAVE_ROTR)
     else()
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -maes")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -maes")

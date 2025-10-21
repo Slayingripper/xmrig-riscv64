@@ -30,7 +30,7 @@ if (CMAKE_C_COMPILER_ID MATCHES MSVC)
         target_compile_definitions(argon2-${FEATURE} PRIVATE ${DEF})
     endfunction()
 
-    add_feature_impl(sse2    "/arch:SSSE3"   HAVE_SSE2)
+    add_feature_impl(sse2    ""              HAVE_SSE2)
     add_feature_impl(ssse3   "/arch:SSSE3"   HAVE_SSSE3)
     add_feature_impl(xop     ""              HAVE_XOP)
     add_feature_impl(avx2    "/arch:AVX2"    HAVE_AVX2)
