@@ -25,6 +25,7 @@
 
 
 #include "backend/cpu/platform/BasicCpuInfo.h"
+#include "base/tools/String.h"
 #include "3rdparty/rapidjson/document.h"
 
 
@@ -51,7 +52,7 @@ xmrig::BasicCpuInfo::BasicCpuInfo() :
 
     auto name = cpu_name_riscv();
     if (!name.isNull()) {
-        strncpy(m_brand, name, sizeof(m_brand) - 1);
+        strncpy(m_brand, name.data(), sizeof(m_brand) - 1);
     }
     
     // Check for crypto extensions (Zknd/Zkne/Zknh - AES and SHA)
