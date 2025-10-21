@@ -1,5 +1,7 @@
 /* XMRig
- * Copyright (c) 2025 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
+ * Copyright (c) 2025      Slayingripper <https://github.com/Slayingripper>
+ * Copyright (c) 2018-2025 SChernykh     <https://github.com/SChernykh>
+ * Copyright (c) 2016-2025 XMRig         <support@xmrig.com>
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -18,6 +20,9 @@
 /*
  * SSE to RISC-V Vector (RVV) optimized compatibility header
  * Provides both scalar fallback and vectorized implementations using RVV intrinsics
+ * 
+ * Based on sse2neon.h concepts, adapted for RISC-V architecture with RVV extensions
+ * Original sse2neon.h: https://github.com/DLTcollab/sse2neon
  */
 
 #ifndef XMRIG_SSE2RVV_OPTIMIZED_H
