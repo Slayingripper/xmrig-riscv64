@@ -33,9 +33,7 @@ xmrig::BasicCpuInfo::BasicCpuInfo() :
         m_units[i] = i;
     }
 
-#   ifdef XMRIG_RISCV
-    memcpy(m_brand, "RISC-V", 6);
-#   elif (XMRIG_ARM == 8)
+#   if (XMRIG_ARM == 8)
     memcpy(m_brand, "ARMv8", 5);
 #   else
     memcpy(m_brand, "ARMv7", 5);
@@ -85,9 +83,7 @@ rapidjson::Value xmrig::BasicCpuInfo::toJSON(rapidjson::Document &doc) const
     out.AddMember("msr",        "none", allocator);
     out.AddMember("assembly",   "none", allocator);
 
-#   ifdef XMRIG_RISCV
-    out.AddMember("arch", "riscv64", allocator);
-#   elif (XMRIG_ARM == 8)
+#   if (XMRIG_ARM == 8)
     out.AddMember("arch", "aarch64", allocator);
 #   else
     out.AddMember("arch", "aarch32", allocator);
